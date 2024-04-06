@@ -356,7 +356,10 @@ def gerenciador(cont, paramet):
     return cont
 
 SaveList = False
-lst_year = [kk for kk in range(param['year_start'], param['year_end'])]
+specificLastYear = True 
+allCountry = False
+countryName = 'bra'
+lst_year = [kk for kk in range(param['year_start'], param['year_end'] + 1)]
 contador = 1
 window = len(lst_year)
 total = len(lst_year)
@@ -374,15 +377,27 @@ while window > 4:
     
     else:
         for ii in range(diff + 1):
-            print("{} : windows {} : {} ".format(contador, window, lst_year[ii: window + ii]))
-            lista_Windows_years.append(lst_year[ii: window + ii])
+            lstTempYears = lst_year[ii: window + ii]
+            print("{} : windows {} : {} ".format(contador, window, lstTempYears))
+            if specificLastYear:
+                if param['year_end'] in lstTempYears:
+                    lista_Windows_years.append(lstTempYears)
+            else:
+                lista_Windows_years.append(lstTempYears)
             contador += 1
     
     window -= 1
-imgColTendc =  ee.ImageCollection(param['asset_output']).merge(
-                            ee.ImageCollection(param['asset_output1'])
-                        ).filter(ee.Filter.eq('name_country', 'Brasil'))
-print("images tendencias Kendal ", imgColTendc.size().getInfo())
+if allCountry:
+    imgColTendc =  ee.ImageCollection(param['asset_output']).merge(
+                                ee.ImageCollection(param['asset_output1'])
+                            )#.filter(ee.Filter.eq('name_country', 'Brasil'))
+    print("images tendencias Kendal ", imgColTendc.size().getInfo())
+else:
+    if countryName == 'bra':
+        imgColTendc = ee.ImageCollection(param['asset_output']).merge(
+                                ee.ImageCollection(param['asset_output1'])
+                            ).filter(ee.Filter.eq('name_country', 'Brasil'))
+        print("images para analisar tendencias de Kendal ", imgColTendc.size().getInfo())
 
 lstSystemIndexImg = imgColTendc.reduceColumns(ee.Reducer.toList(), ['system:index']).get('list').getInfo()
 print("    ", lstSystemIndexImg[:2])

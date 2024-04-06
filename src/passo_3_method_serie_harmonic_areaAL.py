@@ -13,6 +13,7 @@ import gee
 import json
 import csv
 import sys
+from icecream import ic
 import numpy as np
 from datetime import date
 try:
@@ -29,19 +30,21 @@ param = {
     'asset_input': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL',
     'asset_inputBR': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imCol',
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
-    'asset_output': 'projects/nexgenmap/mosaic/harmonic_imCol_area_AL',
+    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/harmonic_imCol_area_AL',
     'asset_panAm': 'projects/mapbiomas-agua/assets/territories/countryPanAmazon',
+    'regionsBr': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
     'numeroTask': 1,
-    'numeroLimit': 200,
+    'numeroLimit': 7,
+    'date_inic': 1985,
+    'date_end': 2023,
     'conta' : {
         '0': 'caatinga01',        
-        '30': 'caatinga02',
-        '60': 'caatinga03',
-        '90': 'caatinga04',
-        '120': 'caatinga05',
-        '140': 'solkan1201',   #      
-        '160': 'diegoGmail',  
-        '180': 'superconta'   
+        '1': 'caatinga02',
+        '2': 'caatinga03',
+        '3': 'caatinga04',
+        '4': 'caatinga05',
+        '5': 'solkan1201',   #      
+        '6': 'solkanGeodatin' 
     }
 }
 dictCodPais = {
@@ -66,6 +69,37 @@ dictCodPaisSig = {
         '8': "per",
         '9': "guf"
     }
+dictRegions = {
+    '11': 'AMAZONIA',
+    '12': 'AMAZONIA',
+    '13': 'AMAZONIA',
+    '14': 'AMAZONIA',
+    '15': 'AMAZONIA',
+    '16': 'AMAZONIA',
+    '17': 'AMAZONIA',
+    '18': 'AMAZONIA',
+    '19': 'AMAZONIA',
+    '21': 'CAATINGA',
+    '22': 'CAATINGA',
+    '23': 'CAATINGA',
+    '24': 'CAATINGA',
+    '31': "CERRADO",
+    '32': "CERRADO",
+    '35': "CERRADO",
+    '34': "CERRADO",
+    '33': "CERRADO",
+    '41': "MATAATLANTICA",
+    '42': "MATAATLANTICA",
+    '44': "MATAATLANTICA",
+    '45': "MATAATLANTICA",
+    '46': "MATAATLANTICA",
+    '47': "MATAATLANTICA",
+    '51': "PAMPA",
+    '52': "PAMPA",
+    '53': "PAMPA",
+    '60': "PANTANAL"   
+}
+contAuth = 0
 class calculo_harmonic(object):
 
     # contador = 1
@@ -115,7 +149,6 @@ def gerenciador(cont, paramet):
     cont += 1    
     return cont
 
-
 def exportarImagem(imgU, nameAl, geomet):    
         
         IdAsset =  param['asset_output'] + "/" + nameAl
@@ -161,33 +194,13 @@ def addVariables_tempo(image):
                         timeRadians.sin().rename('sin')).addBands(
                             ee.Image.constant(1))
 
-lst_Code = ['8','9'];  # '1','2','3','5','6','7',
-# code_country
-imC_areaCountry = ee.ImageCollection(param['asset_input']).filter(ee.Filter.inList('code_country', lst_Code))
-imgCol_areaBr = ee.ImageCollection(param['asset_input'])
+def building_Harmonic_time_serie(tmpImgCol, codeP, iDregion):
 
-imC_areaCountry = imC_areaCountry.map(lambda im : get_number_ids(im))
-imC_areaCountry = imC_areaCountry.sort('numId')
-print(imgCol_areaBr.first().bandNames().getInfo())
-sys.exit()
+    var_dependent = 'area'
+    var_independent = ['constant', 't', 'cos', 'sin']
+    all_variables = ['constant', 't', 'cos', 'sin', 'area']
 
-
-geomet_panAm = ee.FeatureCollection(param['asset_panAm'])
-
-var_dependent = 'area'
-var_independent = ['constant', 't', 'cos', 'sin']
-all_variables = ['constant', 't', 'cos', 'sin', 'area']
-
-print("inicializando o calculo de serie Harmonic")
-for codeP in lst_Code[:]:    
-    print(f"---- PROCESSING IMAGES AREAS OF {dictCodPais[codeP]}-----")
-    imgCol_area = imC_areaCountry.filter(ee.Filter.eq('code_country', codeP))
-    print("    with {} imnages area ".format(imgCol_area.size().getInfo()));
-    
-    geomet = geomet_panAm.filter(ee.Filter.eq('code', int(codeP))).geometry()
-    # print("size geomet ", geomet.size().getInfo())
-    # sys.exit()
-    img_col_addTemp = imgCol_area.map(lambda img: addVariables_tempo(img));
+    img_col_addTemp = tmpImgCol.map(lambda img: addVariables_tempo(img));
     print("show bands ", img_col_addTemp.first().bandNames().getInfo());
     # calculando os coeficientes de cada imagem 
     # The output of the regression reduction is a 4x1 array image area.
@@ -201,7 +214,7 @@ for codeP in lst_Code[:]:
                                         .arrayFlatten([var_independent])
 
     # Compute fitted values
-    calculo_harmonico = calculo_harmonic(array_Trend_Coef, geomet, param['asset_output'])
+    # calculo_harmonico = calculo_harmonic(array_Trend_Coef, geomet, param['asset_output'])
     # fittedHarmonicM = img_col_addTemp.map(lambda img : calculo_harmonico.estimate_harmonic_area(img))
 
     fittedHarmonicM = img_col_addTemp.map(lambda img : img.addBands(img.select(var_independent).multiply(  
@@ -210,10 +223,9 @@ for codeP in lst_Code[:]:
     fittedHarmonicM = fittedHarmonicM.select(['area', 'area_harmonic'])
     print(fittedHarmonicM.first().bandNames().getInfo())
     # print(fittedHarmonicM.first().get('system:index').getInfo())
-    contAuth = 0
-    
-
-    for ii in range(1, 457):
+    sizeSerie = (param['date_end'] - param['date_inic'] + 1) * 12 + 1
+    print(F"***** WE WILL ESTIMATE {sizeSerie} IMAGE HARMONIC **************")
+    for ii in range(1, sizeSerie):
         print("processando a imagem # {} ".format(ii))
         
         img_band = 'area_' + str(ii)
@@ -223,10 +235,56 @@ for codeP in lst_Code[:]:
         # img_tmp = img_tmp.clip(geomet).set('system:footprint', geomet)
         img_tmp = img_tmp.set('numId', ii)
         img_tmp = img_tmp.set('code_country', codeP)
+        img_tmp = img_tmp.set('code_region', iDregion)
 
-        name_im = 'area_harmonic_' + dictCodPaisSig[codeP] + "_" + str(ii)
+        if iDregion != "":
+            name_im = 'area_harmonic_' + dictCodPaisSig[codeP] + "_" + iDregion  + "_" + str(ii)
+        else:
+            name_im = 'area_harmonic_' + dictCodPaisSig[codeP] + "_" + str(ii)
+        
         exportarImagem(img_tmp, name_im, geomet)
-        contAuth = gerenciador(contAuth, param)
+        
+    
+
+contAuth = gerenciador(contAuth, param)
+lst_Code = ['4'];  # '1','2','3','5','6','7','8','9'
+# code_country
+imC_areaCountry = ee.ImageCollection(param['asset_input']).filter(
+                        ee.Filter.inList('code_country', lst_Code))
+# imgCol_areaBr = ee.ImageCollection(param['asset_input'])
+print(f"=== we loaded {imC_areaCountry.size().getInfo()} images areas from ImageCollection defined == ")
+imC_areaCountry = imC_areaCountry.map(lambda im : get_number_ids(im))
+imC_areaCountry = imC_areaCountry.sort('numId')
+print("band name from the first image ==> ", imC_areaCountry.first().bandNames().getInfo())
 
 # Rodando o metodo de Mann Kendall para todos 
 # mann_Kendall_trend_test(imgCol_area)
+print("inicializando o calculo de serie Harmonic")
+for codeP in lst_Code[:]:    
+    print(f"---- PROCESSING IMAGES AREAS OF {dictCodPais[codeP]}-----")
+    # print("size geomet ", geomet.size().getInfo())
+    # sys.exit()
+    
+    if codeP == '4':
+        for idRegion in dictRegions.keys():
+            geomet = ee.FeatureCollection(param['regionsBr']).filter(
+                        ee.Filter.eq('region', int(idRegion))).geometry()
+
+            imgColReg_area = imC_areaCountry.filter(
+                                        ee.Filter.eq('code_country', codeP)).filter(
+                                                ee.Filter.eq('code_region', idRegion))
+            print("    with {} imnages area ".format(imgColReg_area.size().getInfo()));
+            building_Harmonic_time_serie(imgColReg_area, codeP, idRegion);
+            contAuth = gerenciador(contAuth, param)
+
+    else:
+        geomet = ee.FeatureCollection(param['asset_panAm']).filter(
+                        ee.Filter.eq('code', int(codeP))).geometry()
+
+        imgCol_area = imC_areaCountry.filter(ee.Filter.eq('code_country', codeP))
+        print("    with {} imnages area ".format(imgCol_area.size().getInfo()));      
+        building_Harmonic_time_serie(imgColReg_area, codeP, '')
+        contAuth = gerenciador(contAuth, param)
+
+    
+
