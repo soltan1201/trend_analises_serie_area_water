@@ -25,7 +25,7 @@ except:
     raise
 # sys.setrecursionlimit(1000000000)
 
-version = 11
+
 params = {
     'assetBiomas': 'projects/mapbiomas-workspace/AUXILIAR/biomas_IBGE_250mil',
     'asset_panAm': 'projects/mapbiomas-agua/assets/territories/countryPanAmazon',
@@ -128,7 +128,7 @@ dictRegSigla = {
     '53': "pam",
     '60': "pan"   
 }
-
+version = 11
 class calculation_water_area(object):
     version = None
     options = None
@@ -143,11 +143,14 @@ class calculation_water_area(object):
         self.version = nvers
         self.options = nparams
         if myCodeCountry == '4':
+            print("**************** loadinf asset BR *******************")
             self.imgColWater = ee.ImageCollection(nparams['asset_input_br']).filter(
-                        ee.Filter.eq("version", nvers))
+                        ee.Filter.eq("version", str(nvers)))
         else:
             self.imgColWater = ee.ImageCollection(nparams['asset_input_panAm']).filter(
                         ee.Filter.eq("version", nvers))
+
+        print(f"      Were loaded {self.imgColWater.size().getInfo()} images from ImgCol     ")
 
         self.annual_img = None
         self.monthly_img = None
@@ -289,7 +292,7 @@ for codeP in lst_Code:
             print(nameGridsEx)
             cCalculantion_water_area.iter_by_years_calculeArea(featGrids, nameGridsEx, dictRegions[regionCod])
             cont = gerenciador(cont, params)
-            sys.exit()
+            # sys.exit()
 
     else:
         nameGrids = 'grids_' + dictCodPaisSig[codeP] 
