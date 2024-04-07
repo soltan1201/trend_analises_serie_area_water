@@ -27,7 +27,7 @@ except:
 
 
 param = {
-    'asset_input': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4'},
+    'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4'},
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
     'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL/',
     # 'asset_geom': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/geometry_grade',
@@ -202,7 +202,7 @@ def GetPolygonsfromFolder(siglaCount):
     name_biome = None
     sigla_biome = None
     # processar = False
-    getlistPtos = ee.data.getList(param['asset_input'])
+    getlistPtos = ee.data.getList(param['asset_asset_gradesArea'])
     print(f" we loaded {len(getlistPtos)} features grades ")
     # img_col_grades = ee.List([])
     allBands = []
@@ -317,5 +317,7 @@ def GetPolygonsfromFolder(siglaCount):
     #     sys.exit()
 
     # return  ee.ImageCollection(img_col_grades)
-siglaPais = 'bra'
-GetPolygonsfromFolder(siglaPais)
+
+if  __name__ == "__main__":
+    siglaPais = 'bra'
+    GetPolygonsfromFolder(siglaPais)
