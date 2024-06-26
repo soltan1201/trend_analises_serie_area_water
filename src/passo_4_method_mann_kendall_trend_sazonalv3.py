@@ -22,33 +22,38 @@ try:
 except ee.EEException as e:
     print('The Earth Engine package failed to initialize!')
 except:
-    print("Unexpected error:", sys.exc_info()[0])\
+    print("Unexpected error:", sys.exc_info()[0])
     raise
 
 
 param = {
-    'asset_input': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL',
+    # 'asset_input': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColBR',
+    'asset_input': 'projects/nexgenmap/GTAGUA/grade_area_to_imColrbr',
+    'asset_input_harm': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/harmonic_imCol_area_AL',
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
     'asset_geom': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/geometry_grade',
-    'asset_output1': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/stats_Kendall_AL',
-    'asset_output': 'projects/nexgenmap/mosaic/stats_Kendall_AL',
+    # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/stats_Kendall_BR23', 
+    'asset_output': 'projects/nexgenmap/GTAGUA/stats_Kendall_BR23',
+    # 'asset_output' : 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/stats_Kendall_BR23',
+    # 'asset_output1': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/stats_Kendall_AL',
+    # 'asset_output': 'projects/nexgenmap/mosaic/stats_Kendall_AL',
     'regions': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
     'asset_panAm': 'projects/mapbiomas-agua/assets/territories/countryPanAmazon',
     "calc_pValue": True,
     'year_start': 1985,
     'year_end': 2023,
     'numeroTask': 3,
-    'numeroLimit': 160,
+    'numeroLimit': 200,
     'conta' : {
         '0': 'caatinga01',
-        '1': 'caatinga01',
         '20': 'caatinga02',
         '40': 'caatinga03',
         '60': 'caatinga04',
         '80': 'caatinga05',
+        # '100': 'solkanGeodatin',
         '100': 'solkan1201',   #      
-        '120': 'diegoGmail',  
-        '140': 'superconta'    
+        # '120': 'diegoUEFS',  
+        '120': 'superconta'    
     },
     
 }
@@ -169,12 +174,12 @@ class kendall_trend_sazonal(object):
         for kk, vlist_mes in mydictNumIdYear.items():
             print(f" *** PORCESSIN MONTH {kk} ***")
             # a image Collection já está no pais ou region bioma especifico
-            img_Col_sazonal = self.imColArea.filter(ee.Filter.inList('numberId', vlist_mes))
+            img_Col_sazonal = self.imColArea.filter(ee.Filter.inList('numId', vlist_mes))
             # img_Col_sazonal = img_Col_sazonal.map(lambda img: img.set('numId', mydictNumId.get('system:index')))
-
+            # print()
             afterFilter = ee.Filter.lessThan(
-                                        leftField= 'numberId', #'system:start',
-                                        rightField= 'numberId' #'system:start'
+                                        leftField= 'numId', #'system:start',
+                                        rightField= 'numId' #'system:start'
                                     )
             joined_imgCol = ee.ImageCollection(ee.Join.saveAll('after')
                                 .apply(
@@ -183,7 +188,7 @@ class kendall_trend_sazonal(object):
                                     condition= afterFilter
                                 ))
             # print("images collections joined ", joined_imgCol.size().getInfo())
-
+            # sys.exit()
             kendall_ind = joined_imgCol.map(lambda col_current: self.indicador_mann_kendall(col_current))
             kendall_ind = ee.ImageCollection(kendall_ind.flatten()).reduce('sum', 2)
 
@@ -267,7 +272,7 @@ class kendall_trend_sazonal(object):
         p_value_kendall_mean = p_value_kendall_mean.reduce(ee.Reducer.min()).clip(self.geomet).rename('p_value')
         # já não se applica 
         # exportarImagem(p_value_kendall_mean.reduce(ee.Reducer.minMax()).clip(geomet), name_im, geomet)
-        for p_value in [0.005, 0.05]: #0.025, 0.005, 0.05 
+        for p_value in [0.05]: #0.025, 0.005, 0.05 , 0.005, 
             name_im = "mann_kendall_watter_sazonal_p_"+ str(p_value)[2:] + "_" 
             addIndicador = ''
             if str(self.codCountry) == '4':
@@ -278,7 +283,13 @@ class kendall_trend_sazonal(object):
             
             ind_kendall_exp = indice_Kendall.clip(self.geomet)
             ind_kendall_exp = ind_kendall_exp.updateMask(p_value_kendall_mean.lt(p_value)).rename('kendall')   #
-            ind_kendall_exp = ind_kendall_exp.set('p-value', p_value)
+            ind_kendall_exp = ee.Image(ind_kendall_exp).set(
+                                            'p-value', str(p_value)[2:],
+                                            'version', 11, 
+                                            'region', self.idRegion,
+                                            'country', self.codCountry,
+                                            'interval', str(lst_systemIndex[0]) + "_" + str(lst_systemIndex[-1])
+                                            )
             
             self.exportarImagem(ind_kendall_exp, name_im, self.geomet)
             
@@ -351,12 +362,12 @@ def gerenciador(cont, paramet):
         gee.tasks(n= paramet['numeroTask'], return_list= True)        
     
     elif cont > paramet['numeroLimit']:
-        cont = 0    
+        return 0    
     cont += 1    
     return cont
 
 SaveList = False
-specificLastYear = True 
+specificLastYear = False 
 allCountry = False
 countryName = 'bra'
 lst_year = [kk for kk in range(param['year_start'], param['year_end'] + 1)]
@@ -388,14 +399,14 @@ while window > 4:
     
     window -= 1
 if allCountry:
-    imgColTendc =  ee.ImageCollection(param['asset_output']).merge(
-                                ee.ImageCollection(param['asset_output1'])
-                            )#.filter(ee.Filter.eq('name_country', 'Brasil'))
+    imgColTendc =  ee.ImageCollection(param['asset_output'])#.merge(
+                                # ee.ImageCollection(param['asset_output1'])
+                            # )#.filter(ee.Filter.eq('name_country', 'Brasil'))
     print("images tendencias Kendal ", imgColTendc.size().getInfo())
 else:
     if countryName == 'bra':
-        imgColTendc = ee.ImageCollection(param['asset_output']).merge(
-                                ee.ImageCollection(param['asset_output1'])
+        imgColTendc = ee.ImageCollection(param['asset_output']#)#.merge(
+                                # ee.ImageCollection(param['asset_output1'])
                             ).filter(ee.Filter.eq('name_country', 'Brasil'))
         print("images para analisar tendencias de Kendal ", imgColTendc.size().getInfo())
 
@@ -456,20 +467,21 @@ print(f"--- the list of years windows have {len(lista_Windows_years)} lists --- 
 # lst_Code = ['8','9'];  # '1','3','5', # '2','4'==>  '2','6','7','8','9',
 lst_Code = ['4'];
 lstreg = [
-        '11','12','13','14','15','16','17','18','19',
-        '21','22','23','24','31','32','33','34','35',          
-        '41','42','44','45','46','47','51','52','53', 
-        '60'
+        # '11','33',
+        '12','13','14','15','16','17','18','19',
+        '21','22','23','24','31','32','34','35',          
+        '41','42','44','45','46','47','51','52',
+        '53', '60'
 ]
 cont = 0
-indP = 'p_005'
+indP = 'p_05'
 cont = gerenciador(cont, param)
 for codeP in lst_Code[:2]:    
     print("========== processing code ==> ", codeP)
     if codeP == '4':
         for regionCod in lstreg:           
             ccKendall_trend_sazonal = kendall_trend_sazonal(param, codeP, regionCod)
-            for wls_year in lista_Windows_years[:]:            
+            for cc, wls_year in enumerate(lista_Windows_years[:]):            
                 # dictSystemInd = getDict_numId(lst_index, mmonth)
                 year_start = wls_year[0]
                 year_end = wls_year[-1]
@@ -489,11 +501,12 @@ for codeP in lst_Code[:2]:
                 if (indiceSystem not in lstSystemIndexImg) and (
                         indiceSystem1 not in lstSystemIndexImg) and (
                             indiceSystem2 not in lstSystemIndexImg):
+                # if 2023 not in wls_year:
                     ccKendall_trend_sazonal.filterSystem_CalculateKendallIndex(wls_year)
                     cont = gerenciador(cont, param)
     else:
         ccKendall_trend_sazonal = kendall_trend_sazonal(param, codeP, None)    
-        for wls_year in lista_Windows_years[300:]:            
+        for wls_year in lista_Windows_years[:]:            
             # dictSystemInd = getDict_numId(lst_index, mmonth)
             # year_start = wls_year[0]
             # year_end = wls_year[-1]

@@ -30,11 +30,11 @@ param = {
     'asset_input': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL',
     'asset_inputBR': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imCol',
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
-    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/harmonic_imCol_area_AL',
+    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/harmonic_imCol_areaBR',
     'asset_panAm': 'projects/mapbiomas-agua/assets/territories/countryPanAmazon',
     'regionsBr': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
     'numeroTask': 1,
-    'numeroLimit': 7,
+    'numeroLimit': 8,
     'date_inic': 1985,
     'date_end': 2023,
     'conta' : {
@@ -44,7 +44,8 @@ param = {
         '3': 'caatinga04',
         '4': 'caatinga05',
         '5': 'solkan1201',   #      
-        '6': 'solkanGeodatin' 
+        '6': 'solkanGeodatin',
+        '7': 'superconta' 
     }
 }
 dictCodPais = {
@@ -246,7 +247,7 @@ def building_Harmonic_time_serie(tmpImgCol, codeP, iDregion):
         
     
 
-contAuth = gerenciador(contAuth, param)
+contAuth = gerenciador(7, param)
 lst_Code = ['4'];  # '1','2','3','5','6','7','8','9'
 # code_country
 imC_areaCountry = ee.ImageCollection(param['asset_input']).filter(
@@ -266,16 +267,19 @@ for codeP in lst_Code[:]:
     # sys.exit()
     
     if codeP == '4':
+        
         for idRegion in dictRegions.keys():
-            geomet = ee.FeatureCollection(param['regionsBr']).filter(
-                        ee.Filter.eq('region', int(idRegion))).geometry()
+            if int(idRegion) > 51:
+                geomet = ee.FeatureCollection(param['regionsBr']).filter(
+                            ee.Filter.eq('region', int(idRegion))).geometry()
 
-            imgColReg_area = imC_areaCountry.filter(
-                                        ee.Filter.eq('code_country', codeP)).filter(
-                                                ee.Filter.eq('code_region', idRegion))
-            print("    with {} imnages area ".format(imgColReg_area.size().getInfo()));
-            building_Harmonic_time_serie(imgColReg_area, codeP, idRegion);
-            contAuth = gerenciador(contAuth, param)
+                imgColReg_area = imC_areaCountry.filter(
+                                            ee.Filter.eq('code_country', codeP)).filter(
+                                                    ee.Filter.eq('code_region', idRegion))
+                print("    with {} imnages area ".format(imgColReg_area.size().getInfo()));
+                building_Harmonic_time_serie(imgColReg_area, codeP, idRegion);
+                # contAuth = gerenciador(contAuth, param)
+                
 
     else:
         geomet = ee.FeatureCollection(param['asset_panAm']).filter(

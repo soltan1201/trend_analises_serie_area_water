@@ -27,22 +27,27 @@ except:
 
 
 param = {
-    'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4'},
+    # 'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4'},
+    'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br'},
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
-    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL/',
+    # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL/',
+    # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColrbr/',
+    'asset_output': 'projects/nexgenmap/GTAGUA/grade_area_to_imColrbr/',
     # 'asset_geom': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/geometry_grade',
     'asset_panAm': 'projects/mapbiomas-agua/assets/territories/countryPanAmazon',
     'asset_grids': 'users/solkancengine17/shps_public/grid_5_5KM_AmericaL',
     'regions': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
     'asset_gridBase': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/GRIDBASE',
     'numeroTask': 1,
-    'numeroLimit': 40,
+    'numeroLimit':6000,
     'conta' : {
         '0': 'caatinga01',
-        '8': 'caatinga02',
-        '16': 'caatinga03',
-        '24': 'caatinga04',
-        '32': 'caatinga05'       
+        '700': 'caatinga02',
+        '1400': 'caatinga03',
+        '2100': 'caatinga04',
+        '2800': 'caatinga05',
+        '3500': 'solkan1201',   #      
+        '4200': 'superconta'     
     }
 }
 dictCodPais = {
@@ -157,16 +162,14 @@ def gerenciador(cont, paramet):
         gee.tasks(n= paramet['numeroTask'], return_list= True)        
     
     elif cont > paramet['numeroLimit']:
-        cont = 0
-        return cont
+        return 0
     
     cont += 1    
     return cont
 
 def exportarImagem(imgU, nameAl, geomet):
     
-    IdAsset = param['asset_output'] + nameAl   
-    
+    IdAsset = param['asset_output'] + nameAl    
     optExp = {
         'image': imgU,
         'description': nameAl, 
@@ -202,19 +205,24 @@ def GetPolygonsfromFolder(siglaCount):
     name_biome = None
     sigla_biome = None
     # processar = False
-    getlistPtos = ee.data.getList(param['asset_asset_gradesArea'])
-    print(f" we loaded {len(getlistPtos)} features grades ")
+    getlstGridAreas = ee.data.getList(param['asset_asset_gradesArea'])
+    print(f" we loaded  {len(getlstGridAreas)} features grades, we filtered by {siglaCount}")
+    print("the first ", getlstGridAreas[0])
     # img_col_grades = ee.List([])
     allBands = []
     ls_col_final = []
     ls_name_col = ['area_' +  str(kk) for kk in range(1, 13)]
     # ls_name_col = ls_name_col + ['area_annual']
     allBands += ls_name_col
+
     primeiro_ano = 1985
-    
-    contAuth = 0
+    code_region = None
+    lstCodeReg = ['33'] #  '11', '33', ,'22','23','42','44','45','46','47'
+    # sys.exit()
+    contAuth = 4200
+    # contAuth = gerenciador(contAuth, param)
     # contador = 1
-    for jj, idAsset in enumerate(getlistPtos):        
+    for jj, idAsset in enumerate(getlstGridAreas):        
         
         path_ = idAsset.get('id')        
         lsFile =  path_.split("/")
@@ -222,7 +230,7 @@ def GetPolygonsfromFolder(siglaCount):
         # lst_name = ['grids_attr_2022'] # , 'grids_attr_2021', 'grids_attr_2022'
         # if name in lst_name:
         # ===== PROCESSING grids_bra_ama_11_2017 =====
-        # grids_attr_area_bra_ama_13_2023       
+        # grids_attr_area_bra_ama_13_2023     976 pam 51  
 
         if  jj > -1 and siglaCount in nameFile:
             print(f"===== {jj} PROCESSING {nameFile} =====")  
@@ -236,82 +244,83 @@ def GetPolygonsfromFolder(siglaCount):
                 code_region = partes[-2]
                 name_biome = dictRegions[code_region]
                 sigla_biome = dictRegSigla[code_region]
-                print("year = ", myear, 'codigo do pais = ', code_country, " name country = ", name_country,
-                            " sigla biome = ", sigla_biome, " code region = ", code_region, " name biome = ", name_biome)            
+                if code_region in lstCodeReg:
+                    print(f"year = {myear} | codigo do pais = {code_country}  | name country =  {name_country}",
+                          f" | sigla biome = {sigla_biome} | code region = {code_region}  | name biome = {name_biome}")            
             else:
                 print("year = ", myear, 'codigo do pais = ', code_country, " name country = ", name_country)           
+                        
+            if code_region in lstCodeReg:
             
-            
-            PageName = feat_tp.first().get('PageName').getInfo()
-            PageNumber = feat_tp.first().get('PageNumber').getInfo()
-            # code_country = feat_tp.first().get('code_country').getInfo()
-            
-            if 'grids_bra' in nameFile:
-                code_region = feat_tp.first().get('code_region').getInfo()
-                name_biome = feat_tp.first().get('name_biome').getInfo()              
-                    
+                PageName = feat_tp.first().get('PageName').getInfo()
+                PageNumber = feat_tp.first().get('PageNumber').getInfo()
+                # code_country = feat_tp.first().get('code_country').getInfo()
+                
+                # if 'grids_bra' in nameFile:
+                #     code_region = feat_tp.first().get('code_region').getInfo()
+                #     name_biome = feat_tp.first().get('name_biome').getInfo()                           
 
-            # geometry of image 
-            if str(code_country) == '4': 
-                geomet = regionsBr.filter(
-                                ee.Filter.eq('region', int(code_region))
-                            )
-            else:
-                geomet = countryAmazonia.filter(
-                            ee.Filter.eq('code', int(code_country)))        
-            
-            geomet = geomet.geometry()
-            ic(" GEOMETRY REGIONS ", geomet.getInfo().keys())
-
-
-            ic(f"mostrando as propiedades do ano {myear} para {name_country}" )
-            ic(feat_tp.first().propertyNames().getInfo()) # ['properties']
-            
-            for cc, banda in enumerate(ls_name_col):
-
-                numb_bnd = banda.replace('area_', '')
-                numb_bnd = int(numb_bnd)
-
-                difYear = myear - primeiro_ano
-                numbMonth = (difYear * 12) + numb_bnd
-                # banda do mes numerado 
-                bandaMonthNum = 'area_' + str(numbMonth)
-                ls_col_final.append(bandaMonthNum)
-                # print(numb_bnd)
-                # if cc > 2:
-                #     sys.exit()
-                if numb_bnd not in lsfaltantes:
-                    print(" imagem " + banda + " => correspondente a ", bandaMonthNum, " => ", name_country)
-
-                    img_feat = feat_tp.reduceToImage(properties= [banda], reducer= ee.Reducer.first())   
-                    img_feat = img_feat.unmask(0).rename('area')
-                    
-                    if (cc + 1) < 10:
-                        dat_year = str(myear) + '-' + '0' + str(cc + 1) + '-01'
-                    else: 
-                        dat_year = str(myear) + '-' + str(cc + 1) + '-01'
-                    
-                    nameBnb = nameFile.replace('grids_', '')
-                    nameBnb = nameBnb.replace('attr_', '')
-                    nameBnb = nameBnb + '_' + banda
-
-                    img_feat = img_feat.set(
-                                    'system:time_start', ee.Date(dat_year),
-                                    'system:index', nameBnb,
-                                    'system:footprint', geomet,
-                                    'numId', numbMonth,
-                                    'name_country', name_country,
-                                    'code_country', code_country,
-                                    'PageName', PageName,
-                                    'PageNumber', PageNumber,
-                                    'code_region', code_region,
-                                    'name_biome', name_biome
+                # geometry of image 
+                if str(code_country) == '4': 
+                    geomet = regionsBr.filter(
+                                    ee.Filter.eq('region', int(code_region))
                                 )
+                else:
+                    geomet = countryAmazonia.filter(
+                                ee.Filter.eq('code', int(code_country)))        
+                
+                ic(" GEOMETRY REGIONS ", geomet.size().getInfo())
+                geomet = geomet.geometry()
+
+                ic(f"mostrando as propiedades do ano {myear} para {name_country}" )
+                # ic(feat_tp.first().propertyNames().getInfo()) # ['properties']
+                
+                for cc, banda in enumerate(ls_name_col):
+
+                    numb_bnd = banda.replace('area_', '')
+                    dat_year = str(myear) + '-' + numb_bnd + '-01'
+                    numb_bnd = int(numb_bnd)
+
+                    difYear = myear - primeiro_ano
+                    numbMonth = (difYear * 12) + numb_bnd
+                    # banda do mes numerado 
+                    bandaMonthNum = 'area_' + str(numbMonth)
+                    ls_col_final.append(banda)
+                    # print("banda => ", banda)
+                    # if cc > 2:
+                    
+                    if numb_bnd not in lsfaltantes:
+                        print(f" imagem {nameFile}  => correspondente a {banda}  => {name_country} | year {myear}")
+                        
+                        img_feat = feat_tp.reduceToImage(properties= [banda], reducer= ee.Reducer.max())   
+                        img_feat = img_feat.clip(geomet).rename('area')   # .unmask(0)   
+                        # print(img_feat.geometry().getInfo())
+                        # sys.exit()
+                        
+                        
+                        nameBnb = nameFile.replace('grids_attr_', '')
+                        nameBnb = nameBnb + '_' + banda
+                        # maximo posivel 25 * 1000 ==> passando para 16 byte ==> 65535
+                        # não deu certo ==== > .multiply(1000).toInt16()
+                        img_feat = ee.Image(img_feat).set(                                       
+                                        'year', myear,
+                                        'month', int(numb_bnd),
+                                        'numId', numbMonth,
+                                        'name_country', name_country,
+                                        'code_country', code_country,
+                                        'PageName', PageName,
+                                        'PageNumber', PageNumber,
+                                        'code_region', code_region,
+                                        'name_biome', name_biome,
+                                        # 'system:index', nameBnb,
+                                        'system:time_start', ee.Date(dat_year),
+                                        'system:footprint', geomet,
+                                    )
 
 
-                    exportarImagem(img_feat, nameBnb, geomet)
-                    # img_col_grades = img_col_grades.add(img_feat)
-                    # contAuth = gerenciador(contAuth, param)
+                        exportarImagem(img_feat, nameBnb, geomet)
+                        # img_col_grades = img_col_grades.add(img_feat)
+                        contAuth = gerenciador(contAuth, param)
             # contador += 1
     # if jj > 50:
     #     sys.exit()

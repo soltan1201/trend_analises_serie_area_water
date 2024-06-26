@@ -1,0 +1,12 @@
+regions problems de area na imagem
+15, 17, 18, 19 , 21, 22, 23, 24, , 32, 33, 42
+
+
+
+
+
+
+showing regions 11  ====== year que faltam =====
+  ['1989', '1995', '1998', '2004', '2005', '2006', '2007', '2009', '2011', '2013', '2014', '2021', '2022']
+showing regions 33  ====== year que faltam =====
+  ['1988']
