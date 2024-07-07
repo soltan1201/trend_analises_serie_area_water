@@ -33,7 +33,7 @@ param = {
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
     'asset_geom': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/geometry_grade',
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/stats_Kendall_BR23', 
-    'asset_output': 'projects/nexgenmap/GTAGUA/stats_Kendall_BR23',
+    'asset_output': 'projects/nexgenmap/GTAGUA/stats_Kendall_br23',
     # 'asset_output' : 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/stats_Kendall_BR23',
     # 'asset_output1': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/stats_Kendall_AL',
     # 'asset_output': 'projects/nexgenmap/mosaic/stats_Kendall_AL',
@@ -367,7 +367,7 @@ def gerenciador(cont, paramet):
     return cont
 
 SaveList = False
-specificLastYear = False 
+specificLastYear = True 
 allCountry = False
 countryName = 'bra'
 lst_year = [kk for kk in range(param['year_start'], param['year_end'] + 1)]
@@ -391,7 +391,7 @@ while window > 4:
             lstTempYears = lst_year[ii: window + ii]
             print("{} : windows {} : {} ".format(contador, window, lstTempYears))
             if specificLastYear:
-                if param['year_end'] in lstTempYears:
+                if param['year_end'] not in lstTempYears:
                     lista_Windows_years.append(lstTempYears)
             else:
                 lista_Windows_years.append(lstTempYears)
@@ -467,7 +467,7 @@ print(f"--- the list of years windows have {len(lista_Windows_years)} lists --- 
 # lst_Code = ['8','9'];  # '1','3','5', # '2','4'==>  '2','6','7','8','9',
 lst_Code = ['4'];
 lstreg = [
-        # '11','33',
+        '11','33',
         '12','13','14','15','16','17','18','19',
         '21','22','23','24','31','32','34','35',          
         '41','42','44','45','46','47','51','52',

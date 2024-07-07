@@ -27,10 +27,12 @@ except:
 
 
 param = {
-    'asset_input': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL',
-    'asset_inputBR': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imCol',
+    # 'asset_input': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL',
+    # 'asset_inputBR': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imCol',
+    'asset_input': 'projects/nexgenmap/GTAGUA/grade_area_to_imColrbr',
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
-    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/harmonic_imCol_areaBR',
+    # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/harmonic_imCol_areaBR',
+    'asset_output': 'projects/nexgenmap/GTAGUA/harmonic_imCol_areaBR',
     'asset_panAm': 'projects/mapbiomas-agua/assets/territories/countryPanAmazon',
     'regionsBr': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
     'numeroTask': 1,
@@ -44,8 +46,8 @@ param = {
         '3': 'caatinga04',
         '4': 'caatinga05',
         '5': 'solkan1201',   #      
-        '6': 'solkanGeodatin',
-        '7': 'superconta' 
+        # '6': 'solkanGeodatin',
+        '6': 'superconta' 
     }
 }
 dictCodPais = {
@@ -247,7 +249,7 @@ def building_Harmonic_time_serie(tmpImgCol, codeP, iDregion):
         
     
 
-contAuth = gerenciador(7, param)
+contAuth = gerenciador(0, param)
 lst_Code = ['4'];  # '1','2','3','5','6','7','8','9'
 # code_country
 imC_areaCountry = ee.ImageCollection(param['asset_input']).filter(
@@ -269,7 +271,7 @@ for codeP in lst_Code[:]:
     if codeP == '4':
         
         for idRegion in dictRegions.keys():
-            if int(idRegion) > 51:
+            if int(idRegion) > 0:
                 geomet = ee.FeatureCollection(param['regionsBr']).filter(
                             ee.Filter.eq('region', int(idRegion))).geometry()
 
@@ -278,7 +280,7 @@ for codeP in lst_Code[:]:
                                                     ee.Filter.eq('code_region', idRegion))
                 print("    with {} imnages area ".format(imgColReg_area.size().getInfo()));
                 building_Harmonic_time_serie(imgColReg_area, codeP, idRegion);
-                # contAuth = gerenciador(contAuth, param)
+                contAuth = gerenciador(contAuth, param)
                 
 
     else:

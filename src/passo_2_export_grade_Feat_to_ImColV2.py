@@ -217,7 +217,7 @@ def GetPolygonsfromFolder(siglaCount):
 
     primeiro_ano = 1985
     code_region = None
-    lstCodeReg = ['33'] #  '11', '33', ,'22','23','42','44','45','46','47'
+    lstCodeReg = ['11','33'] #   '33', ,'22','23','42','44','45','46','47'
     # sys.exit()
     contAuth = 4200
     # contAuth = gerenciador(contAuth, param)
