@@ -9,15 +9,22 @@
 #########################################################
 
 import ee 
-import gee
-import json
-import csv
+import os
 import sys
 from icecream import ic
-import pandas as pd
-
+import collections
+collections.Callable = collections.abc.Callable
+from pathlib import Path
+pathparent = str(Path(os.getcwd()).parents[0])
+print("pathparent ", pathparent)
+# pathparent = str('/home/superuser/Dados/projAlertas/proj_alertas_ML/src')
+sys.path.append(pathparent)
+from configure_account_projects_ee import get_current_account, get_project_from_account
+courrentAcc, projAccount = get_current_account()
+print(f"projetos selecionado >>> {projAccount}  from {courrentAcc} <<<")
+from gee_tools import *
 try:
-    ee.Initialize()
+    ee.Initialize( project= projAccount )
     print('The Earth Engine package initialized successfully!')
 except ee.EEException as e:
     print('The Earth Engine package failed to initialize!')
@@ -29,6 +36,7 @@ except:
 param = {
     # 'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4'},
     'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br'},
+    'asset_asset_gradesArea2': {'id': 'projects/nexgenmap/GTAGUA/GRIDSTATS/version11_br'},
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL/',
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColrbr/',
@@ -155,11 +163,17 @@ def gerenciador(cont, paramet):
     numberofChange = [kk for kk in paramet['conta'].keys()]
     
     if str(cont) in numberofChange:
-
         print("conta ativa >> {} <<".format(paramet['conta'][str(cont)]))        
-        gee.switch_user(paramet['conta'][str(cont)])
-        gee.init()        
-        gee.tasks(n= paramet['numeroTask'], return_list= True)        
+        switch_user(paramet['conta'][str(cont)])
+        try:
+            ee.Initialize(project= projAccount) # project='ee-cartassol'
+            print('The Earth Engine package initialized successfully!')
+        except ee.EEException as e:
+            print('The Earth Engine package failed to initialize!')      
+        tarefas = tasks(n= paramet['numeroTask'], return_list= True, print_tasks= False)    
+        for cc, lin in enumerate(tarefas):            
+            # relatorios.write(str(lin) + '\n')
+            print(cc, lin)          
     
     elif cont > paramet['numeroLimit']:
         return 0
@@ -167,8 +181,7 @@ def gerenciador(cont, paramet):
     cont += 1    
     return cont
 
-def exportarImagem(imgU, nameAl, geomet):
-    
+def exportarImagem(imgU, nameAl, geomet):    
     IdAsset = param['asset_output'] + nameAl    
     optExp = {
         'image': imgU,
@@ -189,8 +202,7 @@ def exportarImagem(imgU, nameAl, geomet):
     
     print ("salvando ... ! " , nameAl)
 
-def GetPolygonsfromFolder(siglaCount):
-    
+def GetPolygonsfromFolder(siglaCount):    
     dictSigPais = {
         'ven': '1',
         'col': '3',
@@ -208,7 +220,10 @@ def GetPolygonsfromFolder(siglaCount):
     getlstGridAreas = ee.data.getList(param['asset_asset_gradesArea'])
     print(f" we loaded  {len(getlstGridAreas)} features grades, we filtered by {siglaCount}")
     print("the first ", getlstGridAreas[0])
+    getlstGridAreas2 = ee.data.getList(param['asset_asset_gradesArea2'])
+    print(f" we loaded  {len(getlstGridAreas2)} features grades 2023 e 2024, we filtered by {siglaCount}")
     # img_col_grades = ee.List([])
+    getlstGridAreas = getlstGridAreas2
     allBands = []
     ls_col_final = []
     ls_name_col = ['area_' +  str(kk) for kk in range(1, 13)]
@@ -217,13 +232,19 @@ def GetPolygonsfromFolder(siglaCount):
 
     primeiro_ano = 1985
     code_region = None
-    lstCodeReg = ['11','33'] #   '33', ,'22','23','42','44','45','46','47'
+    # lstCodeReg = ['11','33']  '33', ,'22','23','42','44','45','46','47'
+    lstCodeReg =  [
+        # '11','12','13','14','15','16',
+        # '17','18','19', '21','22',
+        # '23','24','31','32','35','34',
+        # '33','41','42','43','44','45',
+        # '46','47','51','52','53','60'               
+    ]
     # sys.exit()
     contAuth = 4200
     # contAuth = gerenciador(contAuth, param)
     # contador = 1
-    for jj, idAsset in enumerate(getlstGridAreas):        
-        
+    for jj, idAsset in enumerate(getlstGridAreas):         
         path_ = idAsset.get('id')        
         lsFile =  path_.split("/")
         nameFile = lsFile[-1]
@@ -244,7 +265,8 @@ def GetPolygonsfromFolder(siglaCount):
                 code_region = partes[-2]
                 name_biome = dictRegions[code_region]
                 sigla_biome = dictRegSigla[code_region]
-                if code_region in lstCodeReg:
+                print("code reg = ", code_region)
+                if str(code_region) in lstCodeReg:
                     print(f"year = {myear} | codigo do pais = {code_country}  | name country =  {name_country}",
                           f" | sigla biome = {sigla_biome} | code region = {code_region}  | name biome = {name_biome}")            
             else:

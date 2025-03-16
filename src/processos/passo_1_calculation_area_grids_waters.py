@@ -9,14 +9,21 @@
 '''
 
 import ee 
-import gee
+import os
 import sys
-from tqdm import tqdm
 import collections
 collections.Callable = collections.abc.Callable
-
+from pathlib import Path
+pathparent = str(Path(os.getcwd()).parents[0])
+print("pathparent ", pathparent)
+# pathparent = str('/home/superuser/Dados/projAlertas/proj_alertas_ML/src')
+sys.path.append(pathparent)
+from configure_account_projects_ee import get_current_account, get_project_from_account
+courrentAcc, projAccount = get_current_account()
+print(f"projetos selecionado >>> {projAccount}  from {courrentAcc} <<<")
+from gee_tools import *
 try:
-    ee.Initialize()
+    ee.Initialize( project= projAccount )
     print('The Earth Engine package initialized successfully!')
 except ee.EEException as e:
     print('The Earth Engine package failed to initialize!')
@@ -32,23 +39,23 @@ params = {
     'asset_grids': 'users/solkancengine17/shps_public/grid_5_5KM_AmericaL',
     'regions': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
     'asset_input_panAm': 'projects/mapbiomas-raisg/PRODUCTOS/AGUA/COLECCION01/water-integracion-02',
-    'asset_input_br': 'projects/mapbiomas-workspace/TRANSVERSAIS/AGUA5-FT',
+    'asset_input_br': 'projects/nexgenmap/TRANSVERSAIS/AGUA5-FT',    
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4',
-    'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br',
+    # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br',
+    'asset_output': 'projects/nexgenmap/GTAGUA/GRIDSTATS/version11_br',
     'asset_gridBase': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/GRIDBASE',
     'version': 11,
     'numeroTask': 3,
-    'numeroLimit': 30,
+    'numeroLimit': 60,
     'conta' : {
         '0': 'caatinga01',
-        '1': 'caatinga02',
-        '2': 'caatinga03',
-        '3': 'caatinga04',
-        '4': 'caatinga05',
-        '5': 'solkanGeodatin',
-        '6': 'solkan1201',   #      
-        '7': 'diegoUEFS',  
-        '8': 'superconta'       
+        '5': 'caatinga02',
+        '10': 'caatinga03',
+        '15': 'caatinga04',
+        '20': 'caatinga05',
+        # '25': 'solkanGeodatin',
+        '25': 'solkan1201',   #      
+        '30': 'superconta'       
     },
 }
 dictCodPais = {
@@ -142,7 +149,7 @@ class calculation_water_area(object):
         '1985', '1986', '1987', '1988', '1989', '1990', '1991', '1992', '1993', '1994', '1995', 
         '1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', 
         '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', 
-        '2018', '2019', '2020', '2021', '2022','2023'
+        '2018', '2019', '2020', '2021', '2022','2023','2024'
     ]
     def __init__(self, nparams, nvers, myCodeCountry):
         self.version = nvers
@@ -213,16 +220,21 @@ class calculation_water_area(object):
 
     def iter_by_years_calculeArea(self, shpsGrids, nameEx, nameBioma, codReg):    
 
-        for yyear in self.lstYears[:]:            
+        for yyear in self.lstYears[-2:]:            
             print("processing year ", yyear)
             nameWaterYear = nameBioma + '-' + yyear + '-' + str(self.version)
             nameWaterMonths = nameBioma + '-' + yyear + '-' + str(self.version) + '_mensal'
+            if str(yyear) == '2024':
+                nameWaterMonths = nameBioma + '-' + yyear + '-' + str(self.version) + '_mensal_validation'
+            print("mensal Index >>>> ", nameWaterMonths)
             self.annual_img = self.imgColWater.filter( ee.Filter.eq("system:index", nameWaterYear));
             # .filter(ee.Filter.eq('cadence', 'annual')).filter(
             #                                     ee.Filter.eq('year', yyear)); 
+            print("checking anual", self.annual_img.size().getInfo())
             self.monthly_img = self.imgColWater.filter(ee.Filter.eq("system:index", nameWaterMonths));
             # .filter(ee.Filter.eq('cadence', 'monthly')).filter(
             #                                     ee.Filter.eq('year', yyear));
+            print("checking mensal", self.monthly_img.first().bandNames().getInfo())
             regionsLocal = self.regions.filter(ee.Filter.eq('region', int(codReg))).geometry()
             if yyear == 1985:
                 print("annual_img " + nameWaterYear + " ==> ", self.annual_img.size().getInfo())
@@ -266,9 +278,17 @@ def gerenciador(cont, paramet):
     if str(cont) in numberofChange:
 
         print("conta ativa >> {} <<".format(paramet['conta'][str(cont)]))        
-        gee.switch_user(paramet['conta'][str(cont)])
-        gee.init()        
-        gee.tasks(n= paramet['numeroTask'], return_list= True)        
+        switch_user(paramet['conta'][str(cont)])
+        try:
+            ee.Initialize(project= projAccount) # project='ee-cartassol'
+            print('The Earth Engine package initialized successfully!')
+        except ee.EEException as e:
+            print('The Earth Engine package failed to initialize!')      
+        tarefas = tasks(n= paramet['numeroTask'], return_list= True, print_tasks= False)    
+        
+        for cc, lin in enumerate(tarefas):            
+            # relatorios.write(str(lin) + '\n')
+            print(cc, lin)    
     
     elif cont > paramet['numeroLimit']:
         return 0    
@@ -277,25 +297,24 @@ def gerenciador(cont, paramet):
 
 lst_Code = ['4'];  # '3','4','1','2','5','6','7','8','9' // 
 lstreg = [
-        '11',
-        #  '12','13','14','15','16','17','18','19',
-        # '21','22','23','24','31','32','35',
-        # '34', '33','41','42', '44',
-        # '45','46','47','51','52','53', '60'   
-             
+        # '11', '12','13','14','15','16','17','18','19',
+        '20',
+        # '21','22','23','24','31', '32','35',
+        # '34', '33','41', 
+        # '42','43', '44', '45','46',
+        # '47','51','52','53', '60'                
     ]
 
-cont = 8
+cont = 30
 cont = gerenciador(cont, params)
 # regionsBr = ee.FeatureCollection(params['regions'])
 limitAmazonia = ee.FeatureCollection(params['asset_panAm']);                       
 print("limite de Amazonia ", limitAmazonia.size().getInfo())
-
-
+# sys.exit()
 
 for codeP in lst_Code:
     cCalculantion_water_area = calculation_water_area(params, version, codeP)   
-
+    # sys.exit()
     if codeP == '4':
         print("processing codigo 4 ==> Brasil")
         
@@ -305,9 +324,9 @@ for codeP in lst_Code:
             sizeFeat = featGrids.size().getInfo()
             print(f"<--- PROCESSING {sizeFeat} GRIDS IN {nameGrids} ---->")
             nameGridsEx = 'grids_attr_area_' + dictCodPaisSig[codeP] + '_' + dictRegSigla[regionCod] + '_' + regionCod
-            print(nameGridsEx)
+            print("name export Area Gride ", nameGridsEx)
             cCalculantion_water_area.iter_by_years_calculeArea(featGrids, nameGridsEx, dictRegions[regionCod], regionCod)
-            # cont = gerenciador(cont, params)
+            cont = gerenciador(cont, params)
             # sys.exit()
 
     else:

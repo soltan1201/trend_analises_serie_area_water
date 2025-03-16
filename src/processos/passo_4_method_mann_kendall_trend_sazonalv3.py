@@ -10,12 +10,27 @@
 # https://developers.google.com/earth-engine/tutorials/community/nonparametric-trends
 
 import ee 
-import gee
-import json
-import csv
+import os
 import sys
-import copy
-from datetime import date
+import collections
+collections.Callable = collections.abc.Callable
+from pathlib import Path
+pathparent = str(Path(os.getcwd()).parents[0])
+print("pathparent ", pathparent)
+# pathparent = str('/home/superuser/Dados/projAlertas/proj_alertas_ML/src')
+sys.path.append(pathparent)
+from configure_account_projects_ee import get_current_account, get_project_from_account
+courrentAcc, projAccount = get_current_account()
+print(f"projetos selecionado >>> {projAccount}  from {courrentAcc} <<<")
+from gee_tools import *
+try:
+    ee.Initialize( project= projAccount )
+    print('The Earth Engine package initialized successfully!')
+except ee.EEException as e:
+    print('The Earth Engine package failed to initialize!')
+except:
+    print("Unexpected error:", sys.exc_info()[0])
+    raise
 try:
     ee.Initialize()
     print('The Earth Engine package initialized successfully!')
@@ -41,7 +56,7 @@ param = {
     'asset_panAm': 'projects/mapbiomas-agua/assets/territories/countryPanAmazon',
     "calc_pValue": True,
     'year_start': 1985,
-    'year_end': 2023,
+    'year_end': 2024,
     'numeroTask': 3,
     'numeroLimit': 200,
     'conta' : {
@@ -50,10 +65,10 @@ param = {
         '40': 'caatinga03',
         '60': 'caatinga04',
         '80': 'caatinga05',
-        # '100': 'solkanGeodatin',
-        '100': 'solkan1201',   #      
+        '100': 'solkanGeodatin',
+        '120': 'solkan1201',   #      
         # '120': 'diegoUEFS',  
-        '120': 'superconta'    
+        '140': 'superconta'    
     },
     
 }
@@ -355,14 +370,21 @@ def gerenciador(cont, paramet):
     #=====================================#
     numberofChange = [kk for kk in paramet['conta'].keys()]    
     if str(cont) in numberofChange:
-
         print("conta ativa >> {} <<".format(paramet['conta'][str(cont)]))        
-        gee.switch_user(paramet['conta'][str(cont)])
-        gee.init()        
-        gee.tasks(n= paramet['numeroTask'], return_list= True)        
+        switch_user(paramet['conta'][str(cont)])
+        try:
+            ee.Initialize(project= projAccount) # project='ee-cartassol'
+            print('The Earth Engine package initialized successfully!')
+        except ee.EEException as e:
+            print('The Earth Engine package failed to initialize!')      
+        tarefas = tasks(n= paramet['numeroTask'], return_list= True, print_tasks= False)    
+        for cc, lin in enumerate(tarefas):            
+            # relatorios.write(str(lin) + '\n')
+            print(cc, lin)          
     
     elif cont > paramet['numeroLimit']:
-        return 0    
+        return 0
+    
     cont += 1    
     return cont
 
@@ -391,7 +413,7 @@ while window > 4:
             lstTempYears = lst_year[ii: window + ii]
             print("{} : windows {} : {} ".format(contador, window, lstTempYears))
             if specificLastYear:
-                if param['year_end'] not in lstTempYears:
+                if param['year_end']  in lstTempYears:
                     lista_Windows_years.append(lstTempYears)
             else:
                 lista_Windows_years.append(lstTempYears)
@@ -473,7 +495,7 @@ lstreg = [
         '41','42','44','45','46','47','51','52',
         '53', '60'
 ]
-cont = 0
+cont = 100
 indP = 'p_05'
 cont = gerenciador(cont, param)
 for codeP in lst_Code[:2]:    
@@ -503,7 +525,7 @@ for codeP in lst_Code[:2]:
                             indiceSystem2 not in lstSystemIndexImg):
                 # if 2023 not in wls_year:
                     ccKendall_trend_sazonal.filterSystem_CalculateKendallIndex(wls_year)
-                    cont = gerenciador(cont, param)
+                    # cont = gerenciador(cont, param)
     else:
         ccKendall_trend_sazonal = kendall_trend_sazonal(param, codeP, None)    
         for wls_year in lista_Windows_years[:]:            
@@ -520,6 +542,6 @@ for codeP in lst_Code[:2]:
             # if sizeImExist < 1:
             print("--- processing ---")
             ccKendall_trend_sazonal.filterSystem_CalculateKendallIndex(wls_year)
-            cont = gerenciador(cont, param)
+            # cont = gerenciador(cont, param)
             
     

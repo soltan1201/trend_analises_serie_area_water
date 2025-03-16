@@ -15,7 +15,8 @@ var vis = {
 var param = {
     // 'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4'},
     'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br'},
-    'asset_water': 'projects/mapbiomas-workspace/TRANSVERSAIS/AGUA5-FT',
+    'asset_asset_gradesArea2': {'id': 'projects/nexgenmap/GTAGUA/GRIDSTATS/version11_br'},
+    'asset_water': 'projects/nexgenmap/TRANSVERSAIS/AGUA5-FT',
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
     // 'asset_input': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColBR',
     'asset_input': 'projects/nexgenmap/GTAGUA/grade_area_to_imColrbr',
@@ -35,7 +36,7 @@ var imColArea = ee.ImageCollection(param.asset_input).filter(
                                 ee.Filter.eq("code_country", codeCountry));
 
 print("layer area water ", imColArea.limit(10));
-var lstMeses = [ 2, 200, 350, 450, 468]
+var lstMeses = [ 2, 200, 350, 450, 468, 478];
 var areamonth2;
 lstMeses.forEach(function(mes){
     areamonth2 = imColArea.filter(ee.Filter.eq('numId', mes))

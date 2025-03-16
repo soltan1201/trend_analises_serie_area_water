@@ -9,15 +9,24 @@
 #########################################################
 
 import ee 
-import gee
-import json
-import csv
+import os
 import sys
-from icecream import ic
+
 import numpy as np
 from datetime import date
+import collections
+collections.Callable = collections.abc.Callable
+from pathlib import Path
+pathparent = str(Path(os.getcwd()).parents[0])
+print("pathparent ", pathparent)
+# pathparent = str('/home/superuser/Dados/projAlertas/proj_alertas_ML/src')
+sys.path.append(pathparent)
+from configure_account_projects_ee import get_current_account, get_project_from_account
+courrentAcc, projAccount = get_current_account()
+print(f"projetos selecionado >>> {projAccount}  from {courrentAcc} <<<")
+from gee_tools import *
 try:
-    ee.Initialize()
+    ee.Initialize( project= projAccount )
     print('The Earth Engine package initialized successfully!')
 except ee.EEException as e:
     print('The Earth Engine package failed to initialize!')
@@ -38,7 +47,7 @@ param = {
     'numeroTask': 1,
     'numeroLimit': 8,
     'date_inic': 1985,
-    'date_end': 2023,
+    'date_end': 2024,
     'conta' : {
         '0': 'caatinga01',        
         '1': 'caatinga02',
@@ -139,23 +148,27 @@ def gerenciador(cont, paramet):
     numberofChange = [kk for kk in paramet['conta'].keys()]
     
     if str(cont) in numberofChange:
-
         print("conta ativa >> {} <<".format(paramet['conta'][str(cont)]))        
-        gee.switch_user(paramet['conta'][str(cont)])
-        gee.init()        
-        gee.tasks(n= paramet['numeroTask'], return_list= True)        
+        switch_user(paramet['conta'][str(cont)])
+        try:
+            ee.Initialize(project= projAccount) # project='ee-cartassol'
+            print('The Earth Engine package initialized successfully!')
+        except ee.EEException as e:
+            print('The Earth Engine package failed to initialize!')      
+        tarefas = tasks(n= paramet['numeroTask'], return_list= True, print_tasks= False)    
+        for cc, lin in enumerate(tarefas):            
+            # relatorios.write(str(lin) + '\n')
+            print(cc, lin)          
     
     elif cont > paramet['numeroLimit']:
-        cont = 0
-        return cont
+        return 0
     
     cont += 1    
     return cont
 
 def exportarImagem(imgU, nameAl, geomet):    
         
-        IdAsset =  param['asset_output'] + "/" + nameAl
-        
+        IdAsset =  param['asset_output'] + "/" + nameAl        
         optExp = {
             'image': imgU,
             'description': nameAl, 
@@ -167,8 +180,7 @@ def exportarImagem(imgU, nameAl, geomet):
         }
 
         task = ee.batch.Export.image.toAsset(**optExp)   
-        task.start()  
-                
+        task.start()                  
         print ("salvando imagem {} !!!!".format(nameAl))
 
 def get_number_ids(img):
@@ -244,13 +256,22 @@ def building_Harmonic_time_serie(tmpImgCol, codeP, iDregion):
             name_im = 'area_harmonic_' + dictCodPaisSig[codeP] + "_" + iDregion  + "_" + str(ii)
         else:
             name_im = 'area_harmonic_' + dictCodPaisSig[codeP] + "_" + str(ii)
-        
-        exportarImagem(img_tmp, name_im, geomet)
+        if ii > sizeSerie - 25:
+            exportarImagem(img_tmp, name_im, geomet)
         
     
 
-contAuth = gerenciador(0, param)
+contAuth = gerenciador(6, param)
 lst_Code = ['4'];  # '1','2','3','5','6','7','8','9'
+lstCodeReg =  [
+        # '11','12','13','14','15','16',
+        # '17','18','19','21','22',
+        # '23','24',
+        # '31','32','35','34',
+        # '33','41','42',
+        # '44','45',
+        # '46','47','51','52','53','60'               
+    ]
 # code_country
 imC_areaCountry = ee.ImageCollection(param['asset_input']).filter(
                         ee.Filter.inList('code_country', lst_Code))
@@ -270,7 +291,7 @@ for codeP in lst_Code[:]:
     
     if codeP == '4':
         
-        for idRegion in dictRegions.keys():
+        for idRegion in lstCodeReg:
             if int(idRegion) > 0:
                 geomet = ee.FeatureCollection(param['regionsBr']).filter(
                             ee.Filter.eq('region', int(idRegion))).geometry()
@@ -280,7 +301,7 @@ for codeP in lst_Code[:]:
                                                     ee.Filter.eq('code_region', idRegion))
                 print("    with {} imnages area ".format(imgColReg_area.size().getInfo()));
                 building_Harmonic_time_serie(imgColReg_area, codeP, idRegion);
-                contAuth = gerenciador(contAuth, param)
+                # contAuth = gerenciador(contAuth, param)
                 
 
     else:
@@ -290,7 +311,7 @@ for codeP in lst_Code[:]:
         imgCol_area = imC_areaCountry.filter(ee.Filter.eq('code_country', codeP))
         print("    with {} imnages area ".format(imgCol_area.size().getInfo()));      
         building_Harmonic_time_serie(imgColReg_area, codeP, '')
-        contAuth = gerenciador(contAuth, param)
+        # contAuth = gerenciador(contAuth, param)
 
     
 

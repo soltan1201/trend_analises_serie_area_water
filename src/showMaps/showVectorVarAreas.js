@@ -24,7 +24,8 @@ function GetPolygonsfromFolder(dictAsset){
 
 var param = {
     // 'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4'}, #
-    'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br'},
+    // 'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br'},
+    'asset_asset_gradesArea': {'id': 'projects/nexgenmap/GTAGUA/GRIDSTATS/version11_br'},
     'asset_water': 'projects/mapbiomas-workspace/TRANSVERSAIS/AGUA5-FT',
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
     'asset_input': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL',
@@ -40,7 +41,7 @@ print(" how many images ", layerWater.size());
 var regions = ee.FeatureCollection(param.regions);
 var codeCountry = '4';
 var nregion = '24';
-var lstyears = ['1985','2001','2014','2022'];
+var lstyears = ['2023','2024'];
 var featColsArea = GetPolygonsfromFolder(param.asset_asset_gradesArea)
 featColsArea.forEach(function(pathArea){
     // print("loading ", pathArea)
