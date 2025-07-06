@@ -209,9 +209,9 @@ def addVariables_tempo(image):
                         timeRadians.sin().rename('sin')).addBands(
                             ee.Image.constant(1))
 
-def building_Harmonic_time_serie(tmpImgCol, codeP, iDregion):
-
-    var_dependent = 'area'
+def building_Harmonic_time_serie(tmpImgCol, codeP, iDregion, geomet):
+    geomet = ee.Geometry(geomet)
+    # var_dependent = 'area'
     var_independent = ['constant', 't', 'cos', 'sin']
     all_variables = ['constant', 't', 'cos', 'sin', 'area']
 
@@ -256,21 +256,22 @@ def building_Harmonic_time_serie(tmpImgCol, codeP, iDregion):
             name_im = 'area_harmonic_' + dictCodPaisSig[codeP] + "_" + iDregion  + "_" + str(ii)
         else:
             name_im = 'area_harmonic_' + dictCodPaisSig[codeP] + "_" + str(ii)
-        if ii > sizeSerie - 25:
-            exportarImagem(img_tmp, name_im, geomet)
-        
+            print(name_im)
+        # if ii > sizeSerie - 25:
+        exportarImagem(img_tmp, name_im, geomet)
+        # sys.exit() 
     
 
-contAuth = gerenciador(6, param)
-lst_Code = ['4'];  # '1','2','3','5','6','7','8','9'
+# contAuth = gerenciador(6, param)
+lst_Code = ['8'];  # '1','2','3','4','5','6','7','8','9'
 lstCodeReg =  [
-        # '11','12','13','14','15','16',
-        # '17','18','19','21','22',
-        # '23','24',
-        # '31','32','35','34',
-        # '33','41','42',
-        # '44','45',
-        # '46','47','51','52','53','60'               
+        '11','12','13','14','15','16',
+        '17','18','19','21','22',
+        '23','24',
+        '31','32','35','34',
+        '33','41','42',
+        '44','45',
+        '46','47','51','52','53','60'               
     ]
 # code_country
 imC_areaCountry = ee.ImageCollection(param['asset_input']).filter(
@@ -287,10 +288,8 @@ print("inicializando o calculo de serie Harmonic")
 for codeP in lst_Code[:]:    
     print(f"---- PROCESSING IMAGES AREAS OF {dictCodPais[codeP]}-----")
     # print("size geomet ", geomet.size().getInfo())
-    # sys.exit()
-    
-    if codeP == '4':
-        
+    # sys.exit()    
+    if codeP == '4':        
         for idRegion in lstCodeReg:
             if int(idRegion) > 0:
                 geomet = ee.FeatureCollection(param['regionsBr']).filter(
@@ -299,18 +298,21 @@ for codeP in lst_Code[:]:
                 imgColReg_area = imC_areaCountry.filter(
                                             ee.Filter.eq('code_country', codeP)).filter(
                                                     ee.Filter.eq('code_region', idRegion))
-                print("    with {} imnages area ".format(imgColReg_area.size().getInfo()));
-                building_Harmonic_time_serie(imgColReg_area, codeP, idRegion);
+                print("    with {} imnages area ".format(imgColReg_area.size().getInfo()))
+                building_Harmonic_time_serie(imgColReg_area, codeP, idRegion, geomet)
                 # contAuth = gerenciador(contAuth, param)
                 
 
     else:
         geomet = ee.FeatureCollection(param['asset_panAm']).filter(
-                        ee.Filter.eq('code', int(codeP))).geometry()
+                        ee.Filter.eq('code', int(codeP)))
+                        
+        print("size geomet ", geomet.size().getInfo())
+        geomet = geomet.geometry()
 
         imgCol_area = imC_areaCountry.filter(ee.Filter.eq('code_country', codeP))
         print("    with {} imnages area ".format(imgCol_area.size().getInfo()));      
-        building_Harmonic_time_serie(imgColReg_area, codeP, '')
+        building_Harmonic_time_serie(imgCol_area, codeP, '', geomet)
         # contAuth = gerenciador(contAuth, param)
 
     

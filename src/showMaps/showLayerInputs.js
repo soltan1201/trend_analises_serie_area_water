@@ -17,7 +17,7 @@ var param = {
     'asset_ImgArea': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL',
     'asset_inputBR': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imCol',
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
-    'asset_imgHamonicArea': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/MOSAIC/harmonic_imCol_area_AL',
+    'asset_imgHamonicArea': 'projects/nexgenmap/GTAGUA/harmonic_imCol_areaBR',
     'asset_panAm': 'projects/mapbiomas-agua/assets/territories/countryPanAmazon',
     'regionsBr': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
 };
@@ -33,8 +33,9 @@ print(imgColBra.filter(ee.Filter.eq('code_region', '11')));
 // =================== dados Harmonicos =====================
 var imgColHarmo = ee.ImageCollection(param.asset_imgHamonicArea);
 print("show the first 4 files images", imgColHarmo.limit(4));
-print("size of ImageCollection ", imgColHarmo.size());
+print("size of ImageCollection Harmonica", imgColHarmo.size());
 
+print("mosatrando para um ano em especifico ", imgColHarmo.filter(ee.Filter.eq('year', 2024)));
 // ============== files grades ==============================
 var lstGradesFile = getPolygonsfromFolder(param.asset_asset_gradesArea);
 

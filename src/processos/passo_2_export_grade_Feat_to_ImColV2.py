@@ -35,8 +35,8 @@ except:
 
 param = {
     # 'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4'},
-    'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br'},
-    'asset_asset_gradesArea2': {'id': 'projects/nexgenmap/GTAGUA/GRIDSTATS/version11_br'},
+    # 'asset_asset_gradesArea': {'id': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br'},
+    'asset_asset_gradesArea': {'id': 'projects/nexgenmap/GTAGUA/GRIDSTATS/version11_br'},
     'asset_centroi': 'projects/mapbiomas-arida/Mapbiomas/grids_attr_centroid',
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColAL/',
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/grade_area_to_imColrbr/',
@@ -202,6 +202,15 @@ def exportarImagem(imgU, nameAl, geomet):
     
     print ("salvando ... ! " , nameAl)
 
+def filter_list_featuresArea_by_country(nlist_feats, sigla_country):
+    print(f" we will filters by {sigla_country} in {len(nlist_feats)}")
+    lst_asset_areas = []
+    for nasset in nlist_feats:
+        # print(" >> ", nasset['id'])
+        if sigla_country in nasset['id']:
+            lst_asset_areas.append(nasset)
+    return lst_asset_areas
+
 def GetPolygonsfromFolder(siglaCount):    
     dictSigPais = {
         'ven': '1',
@@ -218,12 +227,13 @@ def GetPolygonsfromFolder(siglaCount):
     sigla_biome = None
     # processar = False
     getlstGridAreas = ee.data.getList(param['asset_asset_gradesArea'])
-    print(f" we loaded  {len(getlstGridAreas)} features grades, we filtered by {siglaCount}")
+    getlstGridAreas = filter_list_featuresArea_by_country(getlstGridAreas, siglaCount)
+    print(f" we loaded << {len(getlstGridAreas)} >> features grades, we filtered by {siglaCount}")
     print("the first ", getlstGridAreas[0])
-    getlstGridAreas2 = ee.data.getList(param['asset_asset_gradesArea2'])
-    print(f" we loaded  {len(getlstGridAreas2)} features grades 2023 e 2024, we filtered by {siglaCount}")
+    # getlstGridAreas2 = ee.data.getList(param['asset_asset_gradesArea2'])
+    # print(f" we loaded  {len(getlstGridAreas2)} features grades 2023 e 2024, we filtered by {siglaCount}")
     # img_col_grades = ee.List([])
-    getlstGridAreas = getlstGridAreas2
+    # getlstGridAreas = getlstGridAreas2
     allBands = []
     ls_col_final = []
     ls_name_col = ['area_' +  str(kk) for kk in range(1, 13)]
@@ -234,14 +244,14 @@ def GetPolygonsfromFolder(siglaCount):
     code_region = None
     # lstCodeReg = ['11','33']  '33', ,'22','23','42','44','45','46','47'
     lstCodeReg =  [
-        # '11','12','13','14','15','16',
-        # '17','18','19', '21','22',
-        # '23','24','31','32','35','34',
-        # '33','41','42','43','44','45',
-        # '46','47','51','52','53','60'               
+        '11','12','13','14','15','16',
+        '17','18','19', '21','22',
+        '23','24','31','32','35','34',
+        '33','41','42','43','44','45',
+        '46','47','51','52','53','60'               
     ]
     # sys.exit()
-    contAuth = 4200
+    # contAuth = 4200
     # contAuth = gerenciador(contAuth, param)
     # contador = 1
     for jj, idAsset in enumerate(getlstGridAreas):         
@@ -270,79 +280,80 @@ def GetPolygonsfromFolder(siglaCount):
                     print(f"year = {myear} | codigo do pais = {code_country}  | name country =  {name_country}",
                           f" | sigla biome = {sigla_biome} | code region = {code_region}  | name biome = {name_biome}")            
             else:
-                print("year = ", myear, 'codigo do pais = ', code_country, " name country = ", name_country)           
-                        
-            if code_region in lstCodeReg:
+                print(f"year = {myear} || codigo do pais =  {code_country} || name country = {name_country}")    
+                print(f" atributos em null code_region = {code_region} | name_biome= {name_biome}")       
+            # sys.exit()
+            # if code_region in lstCodeReg:
             
-                PageName = feat_tp.first().get('PageName').getInfo()
-                PageNumber = feat_tp.first().get('PageNumber').getInfo()
-                # code_country = feat_tp.first().get('code_country').getInfo()
-                
-                # if 'grids_bra' in nameFile:
-                #     code_region = feat_tp.first().get('code_region').getInfo()
-                #     name_biome = feat_tp.first().get('name_biome').getInfo()                           
+            PageName = feat_tp.first().get('PageName').getInfo()
+            PageNumber = feat_tp.first().get('PageNumber').getInfo()
+            # code_country = feat_tp.first().get('code_country').getInfo()
+            
+            # if 'grids_bra' in nameFile:
+            #     code_region = feat_tp.first().get('code_region').getInfo()
+            #     name_biome = feat_tp.first().get('name_biome').getInfo()                           
 
-                # geometry of image 
-                if str(code_country) == '4': 
-                    geomet = regionsBr.filter(
-                                    ee.Filter.eq('region', int(code_region))
-                                )
-                else:
-                    geomet = countryAmazonia.filter(
-                                ee.Filter.eq('code', int(code_country)))        
-                
-                ic(" GEOMETRY REGIONS ", geomet.size().getInfo())
-                geomet = geomet.geometry()
+            # geometry of image 
+            if str(code_country) == '4': 
+                geomet = regionsBr.filter(
+                                ee.Filter.eq('region', int(code_region))
+                            )
+            else:
+                geomet = countryAmazonia.filter(
+                            ee.Filter.eq('code', int(code_country)))        
+            
+            ic(" GEOMETRY REGIONS ", geomet.size().getInfo())
+            geomet = geomet.geometry()
 
-                ic(f"mostrando as propiedades do ano {myear} para {name_country}" )
-                # ic(feat_tp.first().propertyNames().getInfo()) # ['properties']
-                
-                for cc, banda in enumerate(ls_name_col):
+            ic(f"mostrando as propiedades do ano {myear} para {name_country}" )
+            # ic(feat_tp.first().propertyNames().getInfo()) # ['properties']
+            # sys.exit()
+            for cc, banda in enumerate(ls_name_col):
 
-                    numb_bnd = banda.replace('area_', '')
-                    dat_year = str(myear) + '-' + numb_bnd + '-01'
-                    numb_bnd = int(numb_bnd)
+                numb_bnd = banda.replace('area_', '')
+                dat_year = str(myear) + '-' + numb_bnd + '-01'
+                numb_bnd = int(numb_bnd)
 
-                    difYear = myear - primeiro_ano
-                    numbMonth = (difYear * 12) + numb_bnd
-                    # banda do mes numerado 
-                    bandaMonthNum = 'area_' + str(numbMonth)
-                    ls_col_final.append(banda)
-                    # print("banda => ", banda)
-                    # if cc > 2:
+                difYear = myear - primeiro_ano
+                numbMonth = (difYear * 12) + numb_bnd
+                # banda do mes numerado 
+                bandaMonthNum = 'area_' + str(numbMonth)
+                ls_col_final.append(banda)
+                # print("banda => ", banda)
+                # if cc > 2:
                     
-                    if numb_bnd not in lsfaltantes:
-                        print(f" imagem {nameFile}  => correspondente a {banda}  => {name_country} | year {myear}")
-                        
-                        img_feat = feat_tp.reduceToImage(properties= [banda], reducer= ee.Reducer.max())   
-                        img_feat = img_feat.clip(geomet).rename('area')   # .unmask(0)   
-                        # print(img_feat.geometry().getInfo())
-                        # sys.exit()
-                        
-                        
-                        nameBnb = nameFile.replace('grids_attr_', '')
-                        nameBnb = nameBnb + '_' + banda
-                        # maximo posivel 25 * 1000 ==> passando para 16 byte ==> 65535
-                        # não deu certo ==== > .multiply(1000).toInt16()
-                        img_feat = ee.Image(img_feat).set(                                       
-                                        'year', myear,
-                                        'month', int(numb_bnd),
-                                        'numId', numbMonth,
-                                        'name_country', name_country,
-                                        'code_country', code_country,
-                                        'PageName', PageName,
-                                        'PageNumber', PageNumber,
-                                        'code_region', code_region,
-                                        'name_biome', name_biome,
-                                        # 'system:index', nameBnb,
-                                        'system:time_start', ee.Date(dat_year),
-                                        'system:footprint', geomet,
-                                    )
+                if numb_bnd not in lsfaltantes:
+                    print(f" imagem {nameFile}  => correspondente a {banda}  => {name_country} | year {myear}")
+                    
+                    img_feat = feat_tp.reduceToImage(properties= [banda], reducer= ee.Reducer.max())   
+                    img_feat = img_feat.clip(geomet).rename('area')   # .unmask(0)   
+                    # print(img_feat.geometry().getInfo())
+                    # sys.exit()
+                    
+                    
+                    nameBnb = nameFile.replace('grids_attr_', '')
+                    nameBnb = nameBnb + '_' + banda
+                    # maximo posivel 25 * 1000 ==> passando para 16 byte ==> 65535
+                    # não deu certo ==== > .multiply(1000).toInt16()
+                    img_feat = ee.Image(img_feat).set(                                       
+                                    'year', myear,
+                                    'month', int(numb_bnd),
+                                    'numId', numbMonth,
+                                    'name_country', name_country,
+                                    'code_country', code_country,
+                                    'PageName', PageName,
+                                    'PageNumber', PageNumber,
+                                    'code_region', code_region,
+                                    'name_biome', name_biome,
+                                    # 'system:index', nameBnb,
+                                    'system:time_start', ee.Date(dat_year),
+                                    'system:footprint', geomet,
+                                )
 
 
-                        exportarImagem(img_feat, nameBnb, geomet)
-                        # img_col_grades = img_col_grades.add(img_feat)
-                        contAuth = gerenciador(contAuth, param)
+                    exportarImagem(img_feat, nameBnb, geomet)
+                #         # img_col_grades = img_col_grades.add(img_feat)
+                #         contAuth = gerenciador(contAuth, param)
             # contador += 1
     # if jj > 50:
     #     sys.exit()
@@ -350,5 +361,16 @@ def GetPolygonsfromFolder(siglaCount):
     # return  ee.ImageCollection(img_col_grades)
 
 if  __name__ == "__main__":
-    siglaPais = 'bra'
+    dictCodPaisSig = {
+        '1': "ven",
+        '2': "guy",
+        '3': "col",
+        '4': "bra",
+        '5': "ecu",
+        '6': "sur",
+        '7': "bol",
+        '8': "per",
+        '9': "guf"
+    }
+    siglaPais = 'per'
     GetPolygonsfromFolder(siglaPais)
