@@ -39,15 +39,16 @@ params = {
     'asset_grids': 'users/solkancengine17/shps_public/grid_5_5KM_AmericaL',
     'regions': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
     # 'asset_input_panAm': 'projects/mapbiomas-raisg/PRODUCTOS/AGUA/COLECCION01/water-integracion-02',
-    'asset_input_panAm': 'projects/mapbiomas-peru/assets/WATER/COLLECTION-3/FINAL-ASSETS/water-surface-01',
+    # 'asset_input_panAm': 'projects/mapbiomas-peru/assets/WATER/COLLECTION-3/FINAL-ASSETS/water-surface-01',
+    'asset_input_panAm': 'projects/mapbiomas-bolivia/assets/WATER/COLLECTION-3/01-SURFACE/E03-INTEGRATION/water-integracion-01',
     'asset_input_br': 'projects/nexgenmap/TRANSVERSAIS/AGUA5-FT',    
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4',
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br',
     'asset_output': 'projects/nexgenmap/GTAGUA/GRIDSTATS/version11_br',
     'asset_gridBase': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/GRIDBASE',
-    'version': 1.0,
+    'version': 1,
     'numeroTask': 3,
-    'numeroLimit': 60,
+    'numeroLimit': 35,
     'conta' : {
         '0': 'caatinga01',
         '5': 'caatinga02',
@@ -55,8 +56,8 @@ params = {
         '15': 'caatinga04',
         '20': 'caatinga05',
         '25': 'solkanGeodatin',
-        # '25': 'solkan1201',   #      
-        '30': 'superconta'       
+        '30': 'solkan1201',   #      
+        # '30': 'superconta'       
     },
 }
 dictCodPais = {
@@ -150,7 +151,7 @@ class calculation_water_area(object):
         '1985', '1986', '1987', '1988', '1989', '1990', '1991', '1992', '1993', '1994', '1995', 
         '1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', 
         '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', 
-        '2018', '2019', '2020', '2021', '2022','2023','2024'
+        '2018', '2019', '2020', '2021', '2022','2023','2024', '2025'
     ]
     def __init__(self, nparams, nvers, myCodeCountry):
         self.version = nvers
@@ -193,20 +194,21 @@ class calculation_water_area(object):
 
     def calcularAreaMonth(self, featGrid, nyear, name_bioma):
         geoGrid = featGrid.geometry()
-
+        # band_name = "classification_"
+        band_name = 'w_'
         area_annual = self.calc_area(self.annual_img, geoGrid);
-        area_1 =  self.calc_area(self.monthly_img.select("classification_1") , geoGrid);
-        area_2 =  self.calc_area(self.monthly_img.select("classification_2") , geoGrid);
-        area_3 =  self.calc_area(self.monthly_img.select("classification_3") , geoGrid);
-        area_4 =  self.calc_area(self.monthly_img.select("classification_4") , geoGrid);
-        area_5 =  self.calc_area(self.monthly_img.select("classification_5") , geoGrid);
-        area_6 =  self.calc_area(self.monthly_img.select("classification_6") , geoGrid);
-        area_7 =  self.calc_area(self.monthly_img.select("classification_7") , geoGrid);
-        area_8 =  self.calc_area(self.monthly_img.select("classification_8") , geoGrid);
-        area_9 =  self.calc_area(self.monthly_img.select("classification_9") , geoGrid);
-        area_10 = self.calc_area(self.monthly_img.select("classification_10"), geoGrid);
-        area_11 = self.calc_area(self.monthly_img.select("classification_11"), geoGrid);
-        area_12 = self.calc_area(self.monthly_img.select("classification_12"), geoGrid);
+        area_1 =  self.calc_area(self.monthly_img.select(band_name + "1") , geoGrid)
+        area_2 =  self.calc_area(self.monthly_img.select(band_name + "2") , geoGrid)
+        area_3 =  self.calc_area(self.monthly_img.select(band_name + "3") , geoGrid)
+        area_4 =  self.calc_area(self.monthly_img.select(band_name + "4") , geoGrid)
+        area_5 =  self.calc_area(self.monthly_img.select(band_name + "5") , geoGrid)
+        area_6 =  self.calc_area(self.monthly_img.select(band_name + "6") , geoGrid)
+        area_7 =  self.calc_area(self.monthly_img.select(band_name + "7") , geoGrid)
+        area_8 =  self.calc_area(self.monthly_img.select(band_name + "8") , geoGrid)
+        area_9 =  self.calc_area(self.monthly_img.select(band_name + "9") , geoGrid)
+        area_10 = self.calc_area(self.monthly_img.select(band_name + "10"), geoGrid)
+        area_11 = self.calc_area(self.monthly_img.select(band_name + "11"), geoGrid)
+        area_12 = self.calc_area(self.monthly_img.select(band_name + "12"), geoGrid)
 
         return (featGrid
                     .set("year", nyear)
@@ -229,23 +231,28 @@ class calculation_water_area(object):
 
 
     def iter_by_years_calculeArea(self, shpsGrids, nameEx, nameBioma='country', codReg= None):    
-
-        for yyear in self.lstYears[:]:            
+        print("name biomas ", nameBioma)
+        cont = 15
+        for yyear in self.lstYears[-2:]:            
             print("processing year ", yyear)
             if nameBioma == 'country':
                 # dictCodPaisSig
                 nameWaterYear = f"{dictCodPaisSig[self.myCodeCountry]}-{yyear}-{self.version}"
                 nameWaterMonths = f"{dictCodPaisSig[self.myCodeCountry]}-{yyear}-{self.version}_mensal"
-                print("mensal Index >>>> ", nameWaterMonths)
+                print("<<<<<<<  mensal Index   >>>> ", nameWaterMonths)
                 self.annual_img = (self.imgColWater.filter(ee.Filter.eq('year', int(yyear)))
-                                            .filter(ee.Filter.eq('frequency', 'annual'))
+                                            # .filter(ee.Filter.eq('frequency', 'annual'))
+                                            .filter(ee.Filter.eq('cadence', 'annual'))
                                             .first()
                                     )
                 self.monthly_img = (self.imgColWater.filter(ee.Filter.eq('year', int(yyear)))
-                                            .filter(ee.Filter.eq('frequency', 'monthly'))
+                                            # .filter(ee.Filter.eq('frequency', 'monthly'))
+                                            .filter(ee.Filter.eq('cadence', 'monthly'))
                                             .first()
                                     )
                 print("checking anual", self.annual_img.bandNames().getInfo())
+                print("checking monthly ", self.monthly_img.bandNames().getInfo())
+
             else:                
                 nameWaterYear = f"{dictCodPaisSig[self.myCodeCountry]}-{nameBioma}-{yyear}-{self.version}"
                 nameWaterMonths = f"{dictCodPaisSig[self.myCodeCountry]}-{nameBioma}-{yyear}-{self.version}_mensal"
@@ -284,10 +291,11 @@ class calculation_water_area(object):
             # sys.exit()
             #  fazer uma clasee 
             grids_attr = shpsGrids.map(lambda feat : self.calcularAreaMonth(feat, yyear, nameBioma))
-
+            # sys.exit()
             name_export = f"{nameEx}_{yyear}"
             self.processoExportar(grids_attr, name_export) 
-            
+            # sys.exit()
+            # cont = gerenciador(cont, params)
 
     #exporta a imagem classificada para o asset
     def processoExportar(self, areaFeat, nameT):      
@@ -330,16 +338,16 @@ def gerenciador(cont, paramet):
     cont += 1    
     return cont
 
-lst_Code = ['8'];  # '3','4','1','2','5','6','7','8','9' // 
+lst_Code = ['7'];  # '3','4','1','2','5','6','7','8','9' // 
 lstreg = [
         '11', '12','13','14','15','16','17','18','19','20',
         '21','22','23','24','31','32','35', '34', '33','41', 
         '42','43', '44', '45','46','47','51','52','53', '60'                
     ]
 
-cont = 25
-# cont = gerenciador(cont, params)
-
+cont = 0
+cont = gerenciador(cont, params)
+# sys.exit()
 # regionsBr = ee.FeatureCollection(params['regions'])
 limitAmazonia = ee.FeatureCollection(params['asset_panAm']);                       
 print("limite de Pan Amazonia ", limitAmazonia.size().getInfo())
@@ -369,4 +377,4 @@ for codeP in lst_Code:
         print(f"<--- PROCESSING {sizeFeat} GRIDS IN {nameGrids} ---->")
         nameGridsEx = 'grids_attr_area_' + dictCodPaisSig[codeP]
         cCalculantion_water_area.iter_by_years_calculeArea(featGrids, nameGridsEx)
-        # cont = gerenciador(cont, params)
+        cont = gerenciador(cont, params)

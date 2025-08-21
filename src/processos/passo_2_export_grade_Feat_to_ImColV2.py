@@ -372,5 +372,5 @@ if  __name__ == "__main__":
         '8': "per",
         '9': "guf"
     }
-    siglaPais = 'per'
+    siglaPais = 'bol'
     GetPolygonsfromFolder(siglaPais)
