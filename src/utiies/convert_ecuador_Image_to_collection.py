@@ -38,7 +38,7 @@ lstCoord = [
     [-82.31406366826762,-5.229503725077616]
 ]
 geomEc = ee.Geometry.Polygon(lstCoord)
-create_asset = True
+create_asset = False
 asset_water = 'projects/mapbiomas-ecuador/assets/MAPBIOMAS-WATER/COLECCION3/ECUADOR/FINAL-ASSETS/clasificacion-glaciar-EC_C3'
 asset_output = 'projects/mapbiomas-ecuador/assets/MAPBIOMAS-WATER/COLECCION3/ECUADOR/FINAL-ASSETS/collection-glaciar-EC_C3'
 
@@ -63,7 +63,7 @@ if create_asset:
     except Exception as e:
         print(f"Erro ao criar o asset: {e}")
         create_asset = False
-    
+        sys.exit()
 
 def exportarImagem(imgU, nameAl, mgeom):    
     IdAsset = os.path.join(asset_output, nameAl)  
@@ -86,20 +86,20 @@ def exportarImagem(imgU, nameAl, mgeom):
 raster_bruto = ee.Image(asset_water)
 year_end = 2024
 
-if create_asset:
-    for cc, nyear in enumerate(range(1985, year_end + 1)):
-        print(f" #{cc}  >> {nyear}")
-        img_raster_yy = raster_bruto.select(f"classification_{nyear}")
-        img_raster_yy = img_raster_yy.gt(0).selfMask()    
-        img_raster_yy = ee.Image(img_raster_yy).set(
-                                'version', '1', 'year', nyear,
-                                'cadence','annual', 'code_region', 1004,
-                                'collection', '3', 'descripcion', 'filtro espacial',
-                                'pais', 'ECUADOR', 'paso', 'P03',
-                                'source', 'gtglaciar', 'system:footprint', geomEc
-                            )
 
-        # print(' bands >>> ', img_raster_yy.bandNames().getInfo())
-        name_export = f"glaciar-{nyear}_annual_v1"
-        exportarImagem(img_raster_yy, name_export, geomEc)
+for cc, nyear in enumerate(range(1985, year_end + 1)):
+    print(f" #{cc}  >> {nyear}")
+    img_raster_yy = raster_bruto.select(f"classification_{nyear}")
+    img_raster_yy = img_raster_yy.gt(0).selfMask()    
+    img_raster_yy = ee.Image(img_raster_yy).rename('classification').set(
+                            'version', '1', 'year', nyear,
+                            'cadence','annual', 'code_region', 1004,
+                            'collection', '3', 'descripcion', 'filtro espacial',
+                            'pais', 'ECUADOR', 'paso', 'P03',
+                            'source', 'gtglaciar', 'system:footprint', geomEc
+                        )
+
+    # print(' bands >>> ', img_raster_yy.bandNames().getInfo())
+    name_export = f"glaciar-{nyear}_annual_v1"
+    exportarImagem(img_raster_yy, name_export, geomEc)
 
