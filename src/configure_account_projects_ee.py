@@ -12,7 +12,7 @@ dictProjAccount = {
     'diegoGmail': 'diegocosta',
     'diegoUEFS': 'diegocosta',
     # 'superconta': 'mapbiomas'
-    'superconta': 'mapbiomas-brazil'
+    'superconta': 'mapbiomas'
 }
 
 def get_current_account():
