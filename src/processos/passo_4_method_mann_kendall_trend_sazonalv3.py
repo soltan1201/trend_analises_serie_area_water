@@ -407,7 +407,7 @@ SaveList = False
 # pensado para quando precisa só anexar o último ano 
 specificLastYear = False 
 allCountry = False
-countryName = 'per'
+countryName = 'ecu'
 lst_year = [kk for kk in range(param['year_start'], param['year_end'] + 1)]
 contador = 1
 window = len(lst_year)
@@ -502,7 +502,7 @@ dictRegSigla = {
 print(f"--- the list of years windows have {len(lista_Windows_years)} lists --- ")
 # sys.exit()
 # lst_Code = ['8','9'];  # '1','3','5', # '2','4'==>  '2','6','7','8','9',
-lst_Code = ['7'];
+lst_Code = ['5'];
 lstreg = [
         '11','33',
         '12','13','14','15','16','17','18','19',
