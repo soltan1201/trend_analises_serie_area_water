@@ -213,9 +213,10 @@ def filter_list_featuresArea_by_country(nlist_feats, sigla_country):
 
 def GetPolygonsfromFolder(siglaCount):    
     dictSigPais = {
-        'ven': '1',
+        'ven': '1',        
         'col': '3',
-        'bra': '4'
+        'bra': '4',
+        'ecu': '5'
     }
     siglaCount = 'grids_attr_area_' + siglaCount
     print(f' sigla now is ===> {siglaCount} < ===')
@@ -372,5 +373,6 @@ if  __name__ == "__main__":
         '8': "per",
         '9': "guf"
     }
-    siglaPais = 'bol'
+    # siglaPais = 'bol'
+    siglaPais = 'ecu'
     GetPolygonsfromFolder(siglaPais)

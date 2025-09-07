@@ -40,15 +40,16 @@ params = {
     'regions': 'users/geomapeamentoipam/AUXILIAR/regioes_biomas_col2',
     # 'asset_input_panAm': 'projects/mapbiomas-raisg/PRODUCTOS/AGUA/COLECCION01/water-integracion-02',
     # 'asset_input_panAm': 'projects/mapbiomas-peru/assets/WATER/COLLECTION-3/FINAL-ASSETS/water-surface-01',
-    'asset_input_panAm': 'projects/mapbiomas-bolivia/assets/WATER/COLLECTION-3/01-SURFACE/E03-INTEGRATION/water-integracion-01',
+    # 'asset_input_panAm': 'projects/mapbiomas-bolivia/assets/WATER/COLLECTION-3/01-SURFACE/E03-INTEGRATION/water-integracion-01',
+    'asset_input_panAm': 'projects/mapbiomas-ecuador/assets/MAPBIOMAS-WATER/COLECCION3/ECUADOR/FINAL-ASSETS/water-surface-03',
     'asset_input_br': 'projects/nexgenmap/TRANSVERSAIS/AGUA5-FT',    
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/versionPanAm_4',
     # 'asset_output': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/version11_br',
     'asset_output': 'projects/nexgenmap/GTAGUA/GRIDSTATS/version11_br',
     'asset_gridBase': 'projects/mapbiomas-workspace/AMOSTRAS/GTAGUA/GRIDSTATS/GRIDBASE',
-    'version': 1,
+    'version': 2,
     'numeroTask': 3,
-    'numeroLimit': 35,
+    'numeroLimit': 40,
     'conta' : {
         '0': 'caatinga01',
         '5': 'caatinga02',
@@ -57,7 +58,7 @@ params = {
         '20': 'caatinga05',
         '25': 'solkanGeodatin',
         '30': 'solkan1201',   #      
-        # '30': 'superconta'       
+        '35': 'superconta'       
     },
 }
 dictCodPais = {
@@ -151,21 +152,22 @@ class calculation_water_area(object):
         '1985', '1986', '1987', '1988', '1989', '1990', '1991', '1992', '1993', '1994', '1995', 
         '1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', 
         '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', 
-        '2018', '2019', '2020', '2021', '2022','2023','2024', '2025'
+        '2018', '2019', '2020', '2021', '2022','2023','2024'#, '2025'
     ]
+
     def __init__(self, nparams, nvers, myCodeCountry):
-        self.version = nvers
+        self.version = str(nvers)
         self.options = nparams
         self.myCodeCountry = myCodeCountry
         if myCodeCountry == '4':
             print("**************** loadinf asset BR *******************")
             self.imgColWater = (ee.ImageCollection(nparams['asset_input_br'])
-                                    .filter(ee.Filter.eq("version", str(nvers)))
+                                    .filter(ee.Filter.eq("version", nvers))
                             )
             self.regions = ee.FeatureCollection(nparams['regions'])
         else:
             self.imgColWater = (ee.ImageCollection(nparams['asset_input_panAm'])
-                                    .filter(ee.Filter.eq("version", nvers))
+                                    .filter(ee.Filter.eq("version", str(nvers)))
                             )
             self.regions = (ee.FeatureCollection(nparams['asset_panAm'])
                                 .filter(ee.Filter.eq('code', int(myCodeCountry)))
@@ -233,8 +235,8 @@ class calculation_water_area(object):
     def iter_by_years_calculeArea(self, shpsGrids, nameEx, nameBioma='country', codReg= None):    
         print("name biomas ", nameBioma)
         cont = 15
-        for yyear in self.lstYears[-2:]:            
-            print("processing year ", yyear)
+        for yyear in self.lstYears[:]:            
+            print("processing year ", yyear)            
             if nameBioma == 'country':
                 # dictCodPaisSig
                 nameWaterYear = f"{dictCodPaisSig[self.myCodeCountry]}-{yyear}-{self.version}"
@@ -269,6 +271,7 @@ class calculation_water_area(object):
                 # .filter(ee.Filter.eq('cadence', 'monthly')).filter(
                 #                                     ee.Filter.eq('year', yyear));
 
+            # sys.exit()
             # print("checking mensal", self.monthly_img.bandNames().getInfo())
             if self.myCodeCountry == '4':
                 regionsLocal = self.regions.filter(ee.Filter.eq('region', int(codReg)))                
@@ -338,19 +341,20 @@ def gerenciador(cont, paramet):
     cont += 1    
     return cont
 
-lst_Code = ['7'];  # '3','4','1','2','5','6','7','8','9' // 
+lst_Code = ['5'];  # '3','4','1','2','5','6','7','8','9' // 
 lstreg = [
         '11', '12','13','14','15','16','17','18','19','20',
         '21','22','23','24','31','32','35', '34', '33','41', 
         '42','43', '44', '45','46','47','51','52','53', '60'                
     ]
 
-cont = 0
-cont = gerenciador(cont, params)
+cont = 35
+# cont = gerenciador(cont, params)
 # sys.exit()
 # regionsBr = ee.FeatureCollection(params['regions'])
 limitAmazonia = ee.FeatureCollection(params['asset_panAm']);                       
 print("limite de Pan Amazonia ", limitAmazonia.size().getInfo())
+print(limitAmazonia.aggregate_histogram('name').getInfo())
 # sys.exit()
 
 for codeP in lst_Code:
@@ -376,5 +380,6 @@ for codeP in lst_Code:
         sizeFeat = featGrids.size().getInfo()
         print(f"<--- PROCESSING {sizeFeat} GRIDS IN {nameGrids} ---->")
         nameGridsEx = 'grids_attr_area_' + dictCodPaisSig[codeP]
+        # sys.exit()
         cCalculantion_water_area.iter_by_years_calculeArea(featGrids, nameGridsEx)
-        cont = gerenciador(cont, params)
+        # cont = gerenciador(cont, params)

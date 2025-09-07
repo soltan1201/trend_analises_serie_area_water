@@ -263,7 +263,7 @@ def building_Harmonic_time_serie(tmpImgCol, codeP, iDregion, geomet):
     
 
 # contAuth = gerenciador(6, param)
-lst_Code = ['7'];  # '1','2','3','4','5','6','7','8','9'
+lst_Code = ['5'];  # '1','2','3','4','5','6','7','8','9'
 lstCodeReg =  [
         '11','12','13','14','15','16',
         '17','18','19','21','22',
