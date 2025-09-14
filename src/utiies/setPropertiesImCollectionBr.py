@@ -10,11 +10,8 @@
 # https://developers.google.com/earth-engine/tutorials/community/nonparametric-trends
 
 import ee 
-import gee
-import json
-import csv
 import sys
-import copy
+
 from datetime import date
 try:
     ee.Initialize()

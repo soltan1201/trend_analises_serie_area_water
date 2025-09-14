@@ -1,0 +1,2 @@
+converter a imageCollection de Peru e Bolivia para o mesmo formato que Brasil com o scripts convert_asset_imgCollection_exp.py
+    - 'projects/mapbiomas-bolivia/assets/WATER/COLLECTION-3/01-SURFACE/E03-INTEGRATION/water-integracion-01'
